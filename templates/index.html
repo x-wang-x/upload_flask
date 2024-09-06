@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+    <title>Upload Files</title>
+</head>
+<body>
+    <h1>Request Upload Session and Upload Files</h1>
+    <button onclick="requestUploadSession()">Request Upload Session</button>
+    <br>
+    <span id="sesid"></span>
+    <div id="uploadSection" style="display: none;">
+        <input type="file" id="fileInput" name="files" multiple>
+        <button onclick="uploadFiles()">Upload</button>
+        <br>
+        <progress id="progressBar" value="0" max="100"></progress>
+        <span id="status"></span>
+    </div>
+
+    <script>
+        let uploadUrl = '';
+
+        function requestUploadSession() {
+            fetch('/request-upload-session', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    uploadUrl = data.upload_url;
+                    document.getElementById('sesid').innerText = data.session_id
+                    document.getElementById('uploadSection').style.display = 'block';
+                })
+                .catch(error => console.error('Error requesting upload session:', error));
+        }
+
+        function uploadFiles() {
+            if (!uploadUrl) {
+                alert("Please request an upload session first.");
+                return;
+            }
+
+            var fileInput = document.getElementById('fileInput');
+            var files = fileInput.files;
+            if (files.length === 0) {
+                alert("Please select at least one file.");
+                return;
+            }
+
+            var formData = new FormData();
+            for (var i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+
+            var xhr = new XMLHttpRequest();
+            xhr.upload.addEventListener('progress', function(event) {
+                if (event.lengthComputable) {
+                    var percentComplete = (event.loaded / event.total) * 100;
+                    document.getElementById('progressBar').value = percentComplete;
+                    document.getElementById('status').textContent = percentComplete.toFixed(2) + '% uploaded';
+                }
+            });
+
+            xhr.addEventListener('load', function() {
+                if (xhr.status === 200) {
+                    document.getElementById('status').textContent = 'Upload complete!';
+                } else {
+                    document.getElementById('status').textContent = 'Upload failed!';
+                }
+            });
+
+            xhr.addEventListener('error', function() {
+                document.getElementById('status').textContent = 'Upload error!';
+            });
+
+            xhr.open('POST', uploadUrl);
+            xhr.send(formData);
+        }
+    </script>
+</body>
+</html>
