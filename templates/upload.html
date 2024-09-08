@@ -5,10 +5,9 @@
 </head>
 <body>
     <h1>Request Upload Session and Upload Files</h1>
-    <button onclick="requestUploadSession()">Request Upload Session</button>
     <br>
     <span id="sesid"></span>
-    <div id="uploadSection" style="display: none;">
+    <div id="uploadSection" style="display: block;">
         <input type="file" id="fileInput" name="files" multiple>
         <button onclick="uploadFiles()">Upload</button>
         <br>
@@ -17,18 +16,7 @@
     </div>
 
     <script>
-        let uploadUrl = '';
-
-        function requestUploadSession() {
-            fetch('/request-upload-session', { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    uploadUrl = data.upload_url;
-                    document.getElementById('sesid').innerText = data.session_id
-                    document.getElementById('uploadSection').style.display = 'block';
-                })
-                .catch(error => console.error('Error requesting upload session:', error));
-        }
+        let uploadUrl = '/upload';
 
         function uploadFiles() {
             if (!uploadUrl) {
@@ -61,7 +49,7 @@
                 if (xhr.status === 200) {
                     document.getElementById('status').textContent = 'Upload complete!';
                 } else {
-                    document.getElementById('status').textContent = 'Upload failed!';
+                    document.getElementById('status').textContent = JSON.parse(xhr.response).msg;
                 }
             });
 
